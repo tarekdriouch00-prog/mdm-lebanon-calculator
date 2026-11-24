@@ -156,7 +156,7 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
     <div class="card">
       <h2>رأس المال المطلوب</h2>
       <table><thead><tr><th>البند</th><th>متى يُدفع</th><th class="n">المبلغ</th></tr></thead><tbody id="cap"></tbody></table>
-      <p class="note">رسوم MDM Express تشمل ثمن الخدمة (6.85$ لكل طلبية موصلة) ورسوم COD (5%)، وتُخصم من مبلغ التحصيل، فلا تدخل في رأس المال. تكلفة الاختبار: اختبار ناجح بـ 20 طلبية، و1.5 اختبار فاشل يُوقف عند نصف ميزانيته، بنسبة نجاح 40%.</p>
+      <p class="note">رسوم MDM Express تشمل ثمن الخدمة (<span id="svcNote"></span> لكل طلبية موصلة) ورسوم COD (5%)، وتُخصم من مبلغ التحصيل، فلا تدخل في رأس المال. تكلفة الاختبار: اختبار ناجح بـ 20 طلبية، و1.5 اختبار فاشل يُوقف عند نصف ميزانيته، بنسبة نجاح 40%.</p>
     </div>
 
     <div class="card">
@@ -247,7 +247,7 @@ let S=null;
 function render(){
   const x=read(), r=calc(x), be=breakeven(x,r);
   const testCost=x.test?20*x.cpl*1.75:0, batch=r.profit*x.q;
-  S={x,r,be,testCost,batch};
+  S={x,r,be,testCost,batch};$('svcNote').textContent=money(r.svc);
   $('pp').textContent=money(r.profit);
   $('ppS').textContent=r.profit>=0?'بعد كل التكاليف والرسوم':'خسارة عن كل طلبية موصلة';
   $('pb').textContent=money0(batch);
@@ -317,7 +317,7 @@ function message(){
   L.push('','📊 التفاصيل حسب '+nm+'، السيناريو المختار في الحاسبة ('+pct0(x.c)+' تأكيد و'+pct0(x.d)+' توصيل)');
   L.push('• ربحك عن كل طلبية موصلة: '+money(r.profit)+'. الطلبية الموصلة هي التي استلمها الزبون ودفع ثمنها، وعليها وحدها يُحسب الربح.');
   L.push('• صافي ربح '+x.q+' قطعة: '+money0(batch)+'.');
-  L.push('• رسوم MDM Express: ثمن الخدمة 6.85$ عن كل طلبية موصلة، ورسوم التحصيل (COD fee) بنسبة 5% من سعر البيع. تُخصم من المبلغ الذي نحصّله من الزبون، ولا تدفعها مقدمًا.');
+  L.push('• رسوم MDM Express: '+money(r.fees)+' عن كل طلبية موصلة، منها '+money(r.svc)+' ثمن الخدمة، والباقي '+money(r.cod)+' رسوم التحصيل (COD fee) بنسبة 5%. تُخصم من المبلغ الذي نحصّله من الزبون، ولا تدفعها مقدمًا.');
   L.push('• رأس المال المطلوب: نحو '+money0(S.capital)+'، منها البضاعة مع الشحن '+money0(S.stock)+' تُدفع مقدمًا، والإعلانات '+money0(S.ads)+' خلال فترة البيع'+(x.test?'، واختبار المنتجات '+money0(testCost):'')+'.');
   if(rec<=x.q)L.push('• تسترد رأس مالك بعد بيع نحو '+rec+' قطعة من '+x.q+'، وما بعدها ربح صافٍ.');
   else L.push('• لا تسترد رأس مالك كاملًا ضمن هذه الكمية بهذه النسب.');
