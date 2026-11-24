@@ -76,6 +76,8 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 .msgbox{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;line-height:1.7;max-height:420px;overflow:auto}
 .msg{font-size:14px;color:var(--pos);min-height:1.4em;margin-top:6px}
 .scroll{overflow-x:auto}
+.multi tr.me td{background:light-dark(#fff3f3,#2a1a1c)}.multi .flag{white-space:nowrap;font-weight:700}
+@media(max-width:520px){.multi table{font-size:12px}.multi th,.multi td{padding:7px 3px}.multi th{font-size:11px}.multi td.pr{white-space:normal;min-width:64px}.multi .flag{white-space:normal}}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .seg button{min-height:40px;padding:4px 6px;font-size:14px;background:transparent;color:var(--ink);border-radius:9px}
 .seg button.on{background:var(--red);color:#fff}
@@ -93,7 +95,9 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 .bub.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-start-start-radius:4px}
 .bub.me{align-self:flex-end;background:var(--red);color:#fff;border-start-end-radius:4px}
 .bub a{color:inherit;text-decoration:underline}
-.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px 0;background:var(--bg)}
+.chips{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:8px 12px 2px;background:var(--bg);scrollbar-width:thin}
+.chips button{flex:none;white-space:nowrap}.chips button.all{background:var(--red);color:#fff;border-color:var(--red)}
+.allq{display:flex;flex-direction:column;gap:6px;margin-top:8px}.allq button{min-height:36px;padding:6px 10px;font-size:13px;font-weight:600;text-align:start;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px}
 .chips button{min-height:34px;padding:4px 10px;font-size:13px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px}
 .chat form{display:flex;gap:8px;padding:10px 12px;background:var(--bg)}
 .chat form input{direction:rtl;text-align:start}
@@ -152,6 +156,13 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
         <div><span>أعلى تكلفة طلبية في الإعلان</span><b id="beCpl"></b><em id="beCplS"></em></div>
         <div><span>أقل نسبة طلبيات موصلة من الإجمالي</span><b id="beT"></b><em id="beTS"></em></div>
       </div>
+    </div>
+
+    <div class="card multi">
+      <h2>🌍 بِع منتجك في 3 أسواق معًا</h2>
+      <p class="sub" id="multiSub"></p>
+      <div class="scroll"><table><thead><tr><th>البلد</th><th class="n">سعر البيع</th><th class="n">ربح الطلبية</th><th class="n">ربح الكمية</th><th class="n">رأس المال</th></tr></thead><tbody id="multi"></tbody></table></div>
+      <p class="verdict" id="multiNote"></p>
     </div>
 
     <div class="card">
@@ -322,6 +333,31 @@ function breakeven(x,r){
   const den=x.P/CT.k-r.C-CT.svc.a, d=den>0?(x.cpl/x.c+CT.svc.b+CT.svc.g/x.c)/den:Infinity;
   return{price,cpl,t:d<=1?x.c*d:Infinity};
 }
+const ORIGIN=v=>(v==='11'||v==='8')?'dubai':'china';
+let lbChina='15';
+function runCountry(k,x,origin,scen){
+  const sK=K,sCT=CT,sP=PRESETS;
+  K=k;CT=COUNTRIES[k];PRESETS=CT.sc;
+  try{
+    const rate=origin==='dubai'?+CT.srcs.find(o=>o[1].startsWith('دبي'))[0]:(k==='lb'?+lbChina:+CT.srcs[0][0]);
+    const p=PRESETS[scen], ref=sysPrice(x.price,x.w,rate), C=x.price+rate*x.w, local=scenLocal(p,ref,C), P=local/CT.fx, cpl=cplFor(p.cpl,P);
+    const y={rate,price:x.price,w:x.w,P,cpl,c:p.c/100,d:p.d/100,q:x.q,test:x.test};
+    const r=calc(y), test=x.test?20*cpl*1.75:0, cap=test+x.q*r.C+x.q*r.ad;
+    return{k,name:CT.name,P,local,price:CT.fx===1?money0(P):loc(local),profit:r.profit,batch:r.profit*x.q,cap};
+  }finally{K=sK;CT=sCT;PRESETS=sP}
+}
+const FLAGS={lb:'🇱🇧',iq:'🇮🇶',ly:'🇱🇾'};
+const MS={best:'أفضل سيناريو',avg:'المتوسط في كل بلد',safe:'السيناريو الحذر'};
+function renderMulti(x){
+  if(K==='lb')lbChina=ORIGIN($('src').value)==='china'?$('src').value:lbChina;
+  const origin=ORIGIN($('src').value), rows=['lb','iq','ly'].map(k=>runCountry(k,x,origin,cur));
+  const tb=rows.reduce((s,r)=>s+r.batch,0), tc=rows.reduce((s,r)=>s+r.cap,0), me=rows.find(r=>r.k===K);
+  S.multi={rows,tb,tc};
+  $('multiSub').textContent=`نفس المنتج (${origin==='dubai'?'من دبي':'من الصين'}) بإعلان مستقل لكل بلد، وفريق MDM Express يتولى التأكيد والتوصيل والتحصيل في البلدان الثلاثة. الأرقام حسب ${MS[cur]}، و${x.q} قطعة في كل سوق.`;
+  $('multi').innerHTML=rows.map(r=>`<tr class="${r.k===K?'me':''}"><td class="flag">${FLAGS[r.k]} ${r.name}</td><td class="n pr">${r.price}</td><td class="n ${r.profit<0?'neg':''}">${money(r.profit)}</td><td class="n ${r.batch<0?'neg':''}">${money0(r.batch)}</td><td class="n">${money0(r.cap)}</td></tr>`).join('')
+    +`<tr class="sum"><td style="white-space:nowrap">المجموع</td><td></td><td></td><td class="n ${tb<0?'neg':'pos'}">${money0(tb)}</td><td class="n">${money0(tc)}</td></tr>`;
+  $('multiNote').textContent=`بدل ${money0(me.batch)} من سوق واحد، يصل ربحك إلى نحو ${money0(tb)} عند بيع نفس المنتج في الأسواق الثلاثة معًا، أي ${(me.batch>0?(tb/me.batch).toFixed(1):'—')} أضعاف تقريبًا.`;
+}
 let S=null;
 function render(){
   const x=read(), r=calc(x), be=breakeven(x,r);
@@ -364,6 +400,7 @@ function render(){
   if(x.test)cap.unshift(['اختبار المنتجات حتى الوصول إلى منتج رابح','قبل طلب البضاعة',testCost]);
   S.capital=cap.reduce((s,c)=>s+c[2],0);S.stock=stock;S.ads=ads;
   $('cap').innerHTML=cap.map(c=>`<tr><td>${c[0]}</td><td class="m">${c[1]}</td><td class="n">${money0(c[2])}</td></tr>`).join('')+`<tr class="sum"><td>المجموع</td><td></td><td class="n">${money0(S.capital)}</td></tr>`;
+  renderMulti(x);
   $('msgbox').textContent=message();
   draw();
 }
@@ -406,6 +443,10 @@ function message(){
     L.push('• إذا وصلك 100 طلب من الإعلان، يُؤكَّد منها '+Math.round(x.c*100)+' ويستلم الزبون '+Math.round(r.t*100)+'، وتبقى رابحًا ما دام عدد الطلبات المستلمة فوق '+Math.ceil(be.t*100)+'.');
     L.push('• تكلفة الطلب في الإعلان، أي ما تدفعه للإعلان مقابل كل طلب يصلك، محسوبة هنا بـ'+money(x.cpl)+'، وتبقى رابحًا ما دامت أقل من '+money(be.cpl)+'.');
   }
+  if(S.multi){const m=S.multi;L.push('','🌍 ربحك من 3 أسواق بنفس المنتج');
+    L.push('نعمل في لبنان والعراق وليبيا، فتستطيع بيع نفس المنتج في الأسواق الثلاثة معًا بإعلان لكل بلد (حسب '+MS[cur]+'):');
+    m.rows.forEach(r=>L.push('• '+FLAGS[r.k]+' '+r.name+': سعر '+r.price+'، ربح '+money(r.profit)+' للطلبية، و'+money0(r.batch)+' لـ'+x.q+' قطعة.'));
+    L.push('• المجموع: نحو '+money0(m.tb)+' برأس مال إجمالي نحو '+money0(m.tc)+'.');}
   L.push('','💡 توصياتنا');
   L.push('• خطّط لرأس مالك وأرباحك على أساس '+SC_NAMES.avg+' لا أفضل سيناريو، فهو الأقرب للواقع: ربح '+money(avg.profit)+' للطلبية، و'+money0(avg.batch)+' لـ'+x.q+' قطعة. وما يزيد على ذلك مكسب إضافي.');
   L.push('• اختبر المنتج بالإعلانات قبل طلب الكمية'+(x.test?'، وتكلفة الوصول إلى منتج رابح نحو '+money0(testCost)+'.':'.'));
@@ -545,15 +586,40 @@ const OV={iq:IQ,ly:LY};
 let FK='lb';
 const ov=i=>(OV[FK]||{})[i]||{};
 const fq=i=>ov(i).q||FAQ[i].q, fa=i=>ov(i).a||FAQ[i].a;
-const QUICK=[0,1,2,5,7,13];
+const QUICKS={lb:[0,1,2,5,7,13],iq:[0,3,2,7,20,13],ly:[0,14,7,11,2,13]};
+const CN={lb:'لبنان',iq:'العراق',ly:'ليبيا'};
+const chipQ=i=>{const q=fq(i);return q.includes(CN[FK])?q:q.replace(/؟$/,' في '+CN[FK]+'؟')};
 const norm=t=>(' '+t+' ').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[؟?!.,،]/g,' ').replace(/\s+/g,' ');
 const FAQN=FAQ.map(f=>f.k.map(norm).map(k=>k.trim()));
+const STOP=new Set(['كم','هل','ما','ماذا','في','من','الي','الى','علي','على','عن','او','اي','باي','mdm','express','يكون','انا','لي','عندكم','لديكم','هو','هي','مع','كيف','متي','لبنان','العراق','ليبيا']);
+const toks=t=>norm(t).trim().split(' ').filter(w=>w.length>=3&&!STOP.has(w));
+const CW={lb:['لبنان','لبناني','اللبناني','بيروت'],iq:['العراق','عراق','العراقي','بغداد'],ly:['ليبيا','ليبي','الليبي','طرابلس','بنغازي']};
 function answer(text){
   const t=norm(text);
   if(/ (السلام|سلام|مرحبا|اهلا|هلا|hello|hi) /.test(t)&&t.trim().split(' ').length<=4)return 'وعليكم السلام ورحمة الله 🙏 أهلًا بك في MDM Express. اكتب سؤالك، أو اختر من الأسئلة السريعة.';
-  let best=-1,score=0;
-  FAQN.forEach((ks,i)=>{if(FAQ[i].only&&!FAQ[i].only.includes(FK))return;let sc=0;ks.forEach(k=>{if(t.includes(k))sc+=k.length});if(sc>score){score=sc;best=i}});
-  return best>=0&&score>=3?fa(best):CONTACT;
+  // a country named in the question takes priority over the selected one
+  const saved=FK; let named=null;
+  for(const k in CW){if(k!==FK&&CW[k].some(w=>t.includes(' '+w+' ')))named=k}
+  if(named)FK=named;
+  try{
+    const tt=toks(text); let best=-1,score=0;
+    FAQ.forEach((f,i)=>{
+      if(f.only&&!f.only.includes(FK))return;
+      let sc=0;FAQN[i].forEach(k=>{if(t.includes(k))sc+=k.length});
+      const qt=new Set([...toks(FAQ[i].q),...toks(fq(i))]);sc+=tt.filter(w=>qt.has(w)).length*4;
+      if(sc>score){score=sc;best=i}
+    });
+    const ans=best>=0&&score>=3?fa(best):CONTACT;
+    return named&&ans!==CONTACT?'('+({lb:'🇱🇧 لبنان',iq:'🇮🇶 العراق',ly:'🇱🇾 ليبيا'})[named]+')\n'+ans:ans;
+  }finally{FK=saved}
+}
+function showAll(){
+  const d=document.createElement('div');d.className='bub bot';
+  d.appendChild(document.createTextNode('كل الأسئلة عن '+CN[FK]+'، اضغط على أي سؤال:'));
+  const box=document.createElement('div');box.className='allq';
+  FAQ.forEach((f,i)=>{if(f.only&&!f.only.includes(FK))return;const b=document.createElement('button');b.type='button';b.textContent=fq(i);
+    b.addEventListener('click',()=>{bubble(fq(i),'me');setTimeout(()=>bubble(fa(i),'bot'),250)});box.appendChild(b)});
+  d.appendChild(box);$('log').appendChild(d);$('log').scrollTop=d.offsetTop-$('log').offsetTop-8;
 }
 function bubble(text,who){
   const d=document.createElement('div');d.className='bub '+who;
@@ -563,8 +629,8 @@ function bubble(text,who){
   $('log').appendChild(d);$('log').scrollTop=$('log').scrollHeight;
 }
 function ask(text){text=text.trim();if(!text)return;bubble(text,'me');setTimeout(()=>bubble(answer(text),'bot'),250)}
-function buildChips(){$('chips').innerHTML='';QUICK.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=fq(i);b.addEventListener('click',()=>ask(fq(i)));$('chips').appendChild(b)})}
-window.mdmSetCountry=k=>{FK=OV[k]?k:'lb';$('chatSub').textContent='إجابات سريعة عن أسئلة التجار في '+({lb:'لبنان',iq:'العراق',ly:'ليبيا'})[FK];buildChips()};
+function buildChips(){$('chips').innerHTML='';{const b=document.createElement('button');b.type='button';b.className='all';b.textContent='📋 كل الأسئلة';b.addEventListener('click',showAll);$('chips').appendChild(b)}QUICKS[FK].forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=chipQ(i);b.addEventListener('click',()=>{bubble(chipQ(i),'me');setTimeout(()=>bubble(fa(i),'bot'),250)});$('chips').appendChild(b)})}
+window.mdmSetCountry=k=>{const prev=FK;FK=OV[k]?k:'lb';if(prev!==FK&&$('log').children.length)bubble('انتقلنا إلى '+({lb:'🇱🇧',iq:'🇮🇶',ly:'🇱🇾'})[FK]+' '+CN[FK]+'، والأجوبة الآن خاصة بهذا السوق.','bot');$('chatSub').textContent='إجابات سريعة عن أسئلة التجار في '+({lb:'لبنان',iq:'العراق',ly:'ليبيا'})[FK];buildChips()};
 window.mdmSetCountry(window.mdmCountry||'lb');
 let greeted=false;
 function toggleChat(open){$('chat').classList.toggle('open',open);$('fab').setAttribute('aria-expanded',open);
@@ -574,7 +640,7 @@ $('fab').addEventListener('click',()=>toggleChat(!$('chat').classList.contains('
 $('chatX').addEventListener('click',()=>toggleChat(false));
 $('ask').addEventListener('submit',e=>{e.preventDefault();ask($('q2').value);$('q2').value=''});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleChat(false)});
-window.mdmAnswer=answer;
+window.mdmAnswer=answer;window.mdmDbg={FAQ,fq,fa,chipQ,setFK:k=>{FK=k}};
 }
 
 </script>
