@@ -181,13 +181,12 @@ const PRESETS={
 // System sale price: computed from product cost with the best-scenario rates (82% x 68%, CPL $2).
 // Up to $40: profit fixed at $10 per delivered order. Above $40 (expensive product): profit = 25% of the
 // sale price (continuous at $40) and CPL rises by $0.05 for every $1 above $40. Rounded up to a whole dollar.
-const SVC=6.85;
 const PR={c:0.82,d:0.68,cpl:2,T:10,cap:40,share:0.25,cplStep:0.05};
 const cplFor=(base,P)=>+(base+PR.cplStep*Math.max(0,P-PR.cap)).toFixed(2);
 function sysPrice(price,w,rate){
   const C=price+rate*w; let P=30;
   for(let i=0;i<40;i++){
-    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+SVC;
+    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+6.05+0.8/PR.d;
     let n=1.05*(X+PR.T); if(n>PR.cap)n=X/(1/1.05-PR.share);
     if(Math.abs(n-P)<1e-6)break; P=n;
   }
@@ -232,16 +231,16 @@ function read(){
   return{rate:parseFloat($('src').value),price:n('price'),w:n('w'),P:n('sale'),cpl:n('cpl'),
     c:Math.min(1,Math.max(0.01,n('c')/100)),d:Math.min(1,Math.max(0.01,n('d')/100)),q:Math.max(1,Math.round(n('q'))),test:$('test').checked}
 }
-// fees = MDM service (6.85 per delivered order) + COD 5% (as in MDM calculator: price = costs x 1.05)
+// fees = MDM service (6.85 per delivered + 0.80 per returned, spread over delivered) + COD 5% (as in MDM calculator: price = costs x 1.05)
 function calc(x,o={}){
   const c=o.c??x.c, d=o.d??x.d, cpl=o.cpl??x.cpl;
-  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=SVC, cod=x.P-x.P/1.05, fees=svc+cod;
+  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=6.05+0.8/d, cod=x.P-x.P/1.05, fees=svc+cod;
   return{C,ad,svc,cod,fees,profit:x.P-C-ad-fees,t:c*d};
 }
 function breakeven(x,r){
   const price=(r.C+r.ad+r.svc)*1.05;
   const cpl=(x.P/1.05-r.C-r.svc)*x.c*x.d;
-  const den=x.P/1.05-r.C-SVC, d=den>0?(x.cpl/x.c)/den:Infinity;
+  const den=x.P/1.05-r.C-6.05, d=den>0?(x.cpl/x.c+0.8)/den:Infinity;
   return{price,cpl,t:d<=1?x.c*d:Infinity};
 }
 let S=null;
@@ -318,7 +317,7 @@ function message(){
   L.push('','📊 التفاصيل حسب '+nm+'، السيناريو المختار في الحاسبة ('+pct0(x.c)+' تأكيد و'+pct0(x.d)+' توصيل)');
   L.push('• ربحك عن كل طلبية موصلة: '+money(r.profit)+'. الطلبية الموصلة هي التي استلمها الزبون ودفع ثمنها، وعليها وحدها يُحسب الربح.');
   L.push('• صافي ربح '+x.q+' قطعة: '+money0(batch)+'.');
-  L.push('• رسوم MDM Express: '+money(r.fees)+' عن كل طلبية موصلة، منها '+money(r.svc)+' ثمن الخدمة، والباقي '+money(r.cod)+' رسوم التحصيل (COD fee) بنسبة 5%. تُخصم من المبلغ الذي نحصّله من الزبون، ولا تدفعها مقدمًا.');
+  L.push('• رسوم MDM Express: ثمن الخدمة 6.85$ عن كل طلبية موصلة، ورسوم التحصيل (COD fee) بنسبة 5% من سعر البيع. تُخصم من المبلغ الذي نحصّله من الزبون، ولا تدفعها مقدمًا.');
   L.push('• رأس المال المطلوب: نحو '+money0(S.capital)+'، منها البضاعة مع الشحن '+money0(S.stock)+' تُدفع مقدمًا، والإعلانات '+money0(S.ads)+' خلال فترة البيع'+(x.test?'، واختبار المنتجات '+money0(testCost):'')+'.');
   if(rec<=x.q)L.push('• تسترد رأس مالك بعد بيع نحو '+rec+' قطعة من '+x.q+'، وما بعدها ربح صافٍ.');
   else L.push('• لا تسترد رأس مالك كاملًا ضمن هذه الكمية بهذه النسب.');
