@@ -79,6 +79,27 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .seg button{min-height:40px;padding:4px 6px;font-size:14px;background:transparent;color:var(--ink);border-radius:9px}
 .seg button.on{background:var(--red);color:#fff}
+
+/* FAQ assistant */
+.fab{position:fixed;left:16px;bottom:16px;z-index:50;background:var(--red);color:#fff;border-radius:999px;padding:10px 18px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:15px}
+.chat{position:fixed;left:16px;bottom:76px;z-index:51;width:min(380px,calc(100vw - 32px));height:min(560px,calc(100vh - 110px));display:none;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden}
+.chat.open{display:flex}
+.chat .hdr{background:var(--red);color:#fff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chat .hdr b{font-size:16px}.chat .hdr small{display:block;opacity:.9;font-size:12px;font-weight:400}
+.chat .x{background:transparent;color:#fff;min-height:36px;padding:4px 10px;font-size:20px;line-height:1}
+.chat .log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.bub{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-start-start-radius:4px}
+.bub.me{align-self:flex-end;background:var(--red);color:#fff;border-start-end-radius:4px}
+.bub a{color:inherit;text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px 0;background:var(--bg)}
+.chips button{min-height:34px;padding:4px 10px;font-size:13px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:999px}
+.chat form{display:flex;gap:8px;padding:10px 12px;background:var(--bg)}
+.chat form input{direction:rtl;text-align:start}
+.chat form button{background:var(--red);color:#fff;padding:6px 14px}
+.chat .ft{display:flex;gap:8px;padding:0 12px 12px;background:var(--bg)}
+.chat .ft a{flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 6px;text-decoration:none}
+@media(max-width:520px){.chat{left:8px;right:8px;width:auto;bottom:70px;height:calc(100vh - 90px)}.fab{left:12px;bottom:12px}}
 </style>
 </head>
 <body>
@@ -169,6 +190,15 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
   </section>
 </main>
 
+
+<button type="button" class="fab" id="fab" aria-controls="chat" aria-expanded="false">💬 اسأل MDM Express</button>
+<section class="chat" id="chat" role="dialog" aria-label="مساعد أسئلة التجار">
+  <div class="hdr"><div><b>مساعد MDM Express</b><small>إجابات سريعة عن أسئلة التجار في لبنان</small></div><button type="button" class="x" id="chatX" aria-label="إغلاق">×</button></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="chips" id="chips"></div>
+  <form id="ask"><input id="q2" type="text" autocomplete="off" placeholder="اكتب سؤالك هنا…" aria-label="سؤالك"><button type="submit">إرسال</button></form>
+  <div class="ft"><a href="https://wa.me/218912635665" target="_blank" rel="noopener">واتساب فريقنا</a><a href="https://linktr.ee/MDM_Express" target="_blank" rel="noopener">التسجيل</a></div>
+</section>
 <script>
 {
 const $=id=>document.getElementById(id);
@@ -380,6 +410,82 @@ $('themeBtn').addEventListener('click',()=>setTheme(curTheme()==='dark'?'light':
 sysDark.addEventListener('change',()=>{if(!document.documentElement.dataset.theme){paintThemeBtn();render()}});
 paintThemeBtn();
 setPreset('best');
+}
+
+{
+const $=id=>document.getElementById(id);
+// ---------- FAQ assistant (static Q&A bank, no AI) ----------
+const CONTACT='للإجابة عن سؤالك بدقة، تواصل مع فريقنا على الرقم +218 91-2635665، أو سجّل عبر https://linktr.ee/MDM_Express وسيتواصل معك فريقنا 🙏';
+const FAQ=[
+ {q:'كم رسوم MDM Express؟',k:['رسوم','عموله','عمولتكم','ثمن الخدمه','تكلفه الخدمه','سعر الخدمه','كم تاخذون','نسبتكم','fee','cod'],
+  a:'عن كل طلبية موصلة تدفع ثمن الخدمة، نحو 7$، إضافة إلى رسوم التحصيل (COD) بنسبة 5% من سعر البيع. مثلًا لمنتج سعره 30$ يكون الإجمالي نحو 8.7$.'},
+ {q:'هل أدفع الرسوم مقدمًا؟',k:['مقدما','مقدم','مسبقا','ادفع قبل','الدفع المسبق','قبل التوصيل'],
+  a:'لا. تدفع مقدمًا ثمن البضاعة والشحن فقط، أما رسوم الخدمة والتحصيل فتُخصم من المبلغ الذي نحصّله من الزبون بعد التوصيل.'},
+ {q:'متى أستلم أرباحي؟',k:['متي استلم','ارباحي','فلوسي','اموالي','التحويل','دفعات','اسبوعي','سحب','استلم المال','تحويل الارباح'],
+  a:'تصلك أرباحك في دفعات أسبوعية، بالدولار أو بالليرة اللبنانية.'},
+ {q:'بأي عملة يكون البيع؟',k:['عمله','بالدولار','بالليره','باي عمله'],
+  a:'البيع في السوق اللبناني بالدولار.'},
+ {q:'كم تكلفة شحن البضاعة إلى لبنان؟',k:['شحن البضاعه','تكلفه الشحن','سعر الشحن','الكيلو','كيلو','كغ','الصين','دبي','استيراد'],
+  a:'من الصين: 15$ للكيلوغرام لمستحضرات التجميل، و14$ للإلكترونيات، و10.5$ للأدوات.\nمن دبي: 11$ للكيلوغرام لكل الفئات.'},
+ {q:'ما الحد الأدنى للطلب؟',k:['حد ادني','الحد الادني','اقل كميه','كم قطعه','الكميه','الحد الادنا'],
+  a:'الحد الأدنى 50 قطعة لكل منتج.'},
+ {q:'كيف تؤكدون الطلبيات؟',k:['تاكيد','تاكدون','تتصلون','اتصال','كول سنتر','call'],
+  a:'يتصل فريقنا بكل زبون لتأكيد طلبيته قبل الشحن.'},
+ {q:'كم مدة التوصيل؟',k:['مده التوصيل','كم يوم','متي يوصل','متي توصل','وقت التوصيل','بيروت','جبل لبنان','البقاع','الجنوب','الساحل','سرعه التوصيل'],
+  a:'بيروت وجبل لبنان: في اليوم نفسه.\nالساحل والبقاع والجنوب: خلال يوم إلى يومين.\nالطلبيات المؤكدة قبل الساعة 2 ظهرًا تُشحن في اليوم نفسه.'},
+ {q:'ما نسب التأكيد والتوصيل في لبنان؟',k:['نسبه التاكيد','نسبه التوصيل','نسب التاكيد','نسب التوصيل','معدل','النسب'],
+  a:'المتوسط على منصّتنا 71% تأكيد و61% توصيل، وتصل مع أفضل المنتجات إلى نحو 82% و68%.'},
+ {q:'كم تكلفة الطلب في الإعلان؟',k:['تكلفه الطلب','سعر الطلب','cpl','تكلفه الاعلان','سعر الاعلان','الاعلان'],
+  a:'عادةً بين 2$ و3$ للمنتجات التي يقل سعرها عن 35$.'},
+ {q:'كيف أختبر المنتج؟',k:['اختبار','اختبر','تيست','test','اجرب','تجربه المنتج'],
+  a:'أطلق إعلانًا قبل طلب الكمية:\n• يُعتبر المنتج ناجحًا عند 15 إلى 20 طلبية.\n• أوقف الاختبار خلال نصف يوم إن لم يُظهر نتائج.\n• ينجح عادةً نحو 40% من المنتجات المختبرة.'},
+ {q:'ما الفئات التي تنجح في لبنان؟',k:['فئات','فئه','نيش','نيتش','niche','منتجات تنجح','ماذا ابيع','شو ابيع','شو بيع','منتج رابح','ما المنتجات','اي منتج'],
+  a:'• الصحة والعافية والعناية الشخصية.\n• المنزل والمطبخ والتنظيم.\n• إكسسوارات الرجال والعناية الرجالية.'},
+ {q:'كيف يُحدَّد سعر البيع؟',k:['سعر البيع','التسعير','كيف يحدد السعر','كيف تحددون السعر','بكم ابيع'],
+  a:'يحسبه النظام من تكلفة المنتج والشحن، ليعطيك ربحًا قدره 10$ عن كل طلبية موصلة في أفضل سيناريو. وإذا تجاوز السعر 40$، يصبح الربح 25% من السعر.'},
+ {q:'أي سيناريو أعتمد؟',k:['سيناريو','اي سيناريو','اعتمد'],
+  a:'متوسط لبنان، فهو الأقرب للواقع. وما يزيد على ذلك مكسب إضافي.'},
+ {q:'هل يتوفر الدروب شيبينغ أو الأفلييت في لبنان؟',k:['دروب','drop','افلييت','افليت','affiliate','دروبشيبينغ','دروبشيبنغ'],
+  a:'لا، هذه الخدمات غير متوفرة حاليًا في السوق اللبناني.'},
+ {q:'كيف أبدأ معكم؟',k:['كيف ابدا','ابدا معكم','التسجيل','سجل','اشترك','انضم','اتواصل','رقمكم','واتساب','whatsapp'],
+  a:'سجّل عبر https://linktr.ee/MDM_Express أو تواصل مع فريقنا على +218 91-2635665، وسيتواصل معك فريقنا لإتمام الخطوات.'},
+ {q:'كم رأس المال الذي أحتاجه؟',k:['راس المال','راس مال','كم احتاج','ميزانيه','budget','راسمال'],
+  a:'يختلف حسب المنتج، وتحسبه لك الحاسبة بالتفصيل. يتكوّن من ثلاثة أجزاء:\n• ثمن البضاعة مع الشحن، ويُدفع مقدمًا.\n• تكلفة الإعلانات خلال فترة البيع.\n• تكلفة اختبار المنتجات.'},
+ {q:'ما المقصود بالطلبية الموصلة؟',k:['طلبيه موصله','الموصله','موصله','طلبيه الموصله'],
+  a:'هي الطلبية التي استلمها الزبون ودفع ثمنها، وعليها وحدها يُحسب ربحك وتُحسب رسوم الخدمة.'},
+ {q:'لماذا لا أستطيع تغيير سعر البيع؟',k:['لماذا لا استطيع','تغيير السعر','اغير السعر','غير السعر','تعديل السعر','اعدل السعر','مقفل','قفل','لا يتغير'],
+  a:'لأن النظام يحسبه من تكلفة منتجك ليضمن لك هامش ربح مناسبًا في السوق اللبناني، فلا تبيع بسعر يُخسرك.'},
+ {q:'كم تكلفة اختبار المنتجات؟',k:['تكلفه الاختبار','كم يكلف الاختبار','ميزانيه الاختبار','سعر الاختبار','تكلفه التيست'],
+  a:'تتراوح عادةً بين 70$ و105$ للوصول إلى منتج رابح واحد، حسب تكلفة الطلب في الإعلان.'}
+];
+const QUICK=[0,1,2,5,7,13];
+const norm=t=>(' '+t+' ').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[؟?!.,،]/g,' ').replace(/\s+/g,' ');
+const FAQN=FAQ.map(f=>f.k.map(norm).map(k=>k.trim()));
+function answer(text){
+  const t=norm(text);
+  if(/ (السلام|سلام|مرحبا|اهلا|هلا|hello|hi) /.test(t)&&t.trim().split(' ').length<=4)return 'وعليكم السلام ورحمة الله 🙏 أهلًا بك في MDM Express. اكتب سؤالك، أو اختر من الأسئلة السريعة.';
+  let best=-1,score=0;
+  FAQN.forEach((ks,i)=>{let sc=0;ks.forEach(k=>{if(t.includes(k))sc+=k.length});if(sc>score){score=sc;best=i}});
+  return best>=0&&score>=3?FAQ[best].a:CONTACT;
+}
+function bubble(text,who){
+  const d=document.createElement('div');d.className='bub '+who;
+  text.split(/(https?:\/\/\S+)/).forEach(part=>{
+    if(/^https?:\/\//.test(part)){const a=document.createElement('a');a.href=part;a.target='_blank';a.rel='noopener';a.textContent=part;d.appendChild(a)}
+    else d.appendChild(document.createTextNode(part))});
+  $('log').appendChild(d);$('log').scrollTop=$('log').scrollHeight;
+}
+function ask(text){text=text.trim();if(!text)return;bubble(text,'me');setTimeout(()=>bubble(answer(text),'bot'),250)}
+QUICK.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=FAQ[i].q;b.addEventListener('click',()=>ask(FAQ[i].q));$('chips').appendChild(b)});
+let greeted=false;
+function toggleChat(open){$('chat').classList.toggle('open',open);$('fab').setAttribute('aria-expanded',open);
+  if(open&&!greeted){greeted=true;bubble('أهلًا بك في MDM Express 👋 اكتب سؤالك عن الرسوم أو الشحن أو التوصيل أو الأرباح، أو اختر من الأسئلة السريعة.','bot')}
+  if(open)$('q2').focus()}
+$('fab').addEventListener('click',()=>toggleChat(!$('chat').classList.contains('open')));
+$('chatX').addEventListener('click',()=>toggleChat(false));
+$('ask').addEventListener('submit',e=>{e.preventDefault();ask($('q2').value);$('q2').value=''});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleChat(false)});
+window.mdmAnswer=answer;
 }
 
 </script>
