@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>حاسبة التعادل والربح — لبنان</title>
+<title>حاسبة التعادل والربح — MDM Express</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
@@ -79,6 +79,7 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
 .seg button{min-height:40px;padding:4px 6px;font-size:14px;background:transparent;color:var(--ink);border-radius:9px}
 .seg button.on{background:var(--red);color:#fff}
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 
 /* FAQ assistant */
 .fab{position:fixed;left:16px;bottom:16px;z-index:50;background:var(--red);color:#fff;border-radius:999px;padding:10px 18px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:15px}
@@ -104,15 +105,19 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 </head>
 <body>
 <header>
-  <div class="hd"><h1>حاسبة نقطة التعادل والربح — لبنان</h1><button type="button" class="theme" id="themeBtn" aria-label="تبديل وضع النهار والليل"></button></div>
+  <div class="hd"><h1>حاسبة نقطة التعادل والربح — <span id="hCountry">لبنان</span></h1><button type="button" class="theme" id="themeBtn" aria-label="تبديل وضع النهار والليل"></button></div>
   <p>أدخل تكاليف منتجك ونسبك، واعرف ربحك عن كل طلبية، والحدّ الذي تبدأ عنده الخسارة، ورأس المال المطلوب. الحساب بنفس طريقة حاسبة MDM Express.</p>
 </header>
 
 <main class="wrap">
   <section class="card inp" aria-labelledby="t-in">
+    <h2>البلد</h2>
+    <div class="seg two" id="countries" role="group" aria-label="البلد" style="margin-bottom:14px">
+      <button type="button" data-k="lb" class="on">🇱🇧 لبنان</button><button type="button" data-k="iq">🇮🇶 العراق</button>
+    </div>
     <h2 id="t-in">السيناريو</h2>
     <div class="seg" id="presets" role="group" aria-label="السيناريو">
-      <button type="button" data-p="best" class="on">أفضل سيناريو</button><button type="button" data-p="avg">متوسط لبنان</button><button type="button" data-p="safe">سيناريو حذر</button>
+      <button type="button" data-p="best" class="on">أفضل سيناريو</button><button type="button" data-p="avg" id="avgBtn">متوسط لبنان</button><button type="button" data-p="safe">سيناريو حذر</button>
     </div>
     <p class="sub" id="presetNote" style="margin-top:8px"></p>
     <h2 style="margin-top:14px">بيانات المنتج</h2>
@@ -125,11 +130,11 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
       </select></div>
     <div class="f"><label for="price">سعر القطعة ($)</label><input id="price" type="number" inputmode="decimal" step="0.1" min="0"></div>
     <div class="f"><label for="w">وزن القطعة (كغ)</label><input id="w" type="number" inputmode="decimal" step="0.05" min="0"></div>
-    <div class="f lk"><label for="sale">سعر البيع ($) <span class="lock">🔒 يحدّده النظام</span><small id="saleHint">السعر الذي يدفعه الزبون</small></label><input id="sale" type="number" inputmode="decimal" step="0.5" min="0"></div>
+    <div class="f lk"><label for="sale">سعر البيع (<span id="saleCur">$</span>) <span class="lock">🔒 يحدّده النظام</span><small id="saleHint">السعر الذي يدفعه الزبون</small></label><input id="sale" type="number" inputmode="decimal" step="any" min="0"></div>
     <h2 style="margin-top:18px">الإعلان والنسب</h2>
     <div class="f lk"><label for="cpl">تكلفة الطلبية في الإعلان ($) <span class="lock">🔒</span><small id="cplHint">عادةً بين 2 و3</small></label><input id="cpl" type="number" inputmode="decimal" step="0.1" min="0"></div>
-    <div class="f lk"><label for="c">نسبة التأكيد (%) <span class="lock">🔒</span><small>معدل لبنان 71%</small></label><input id="c" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
-    <div class="f lk"><label for="d">نسبة التوصيل (%) <span class="lock">🔒</span><small>معدل لبنان 61%</small></label><input id="d" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
+    <div class="f lk"><label for="c">نسبة التأكيد (%) <span class="lock">🔒</span><small id="cHint">معدل لبنان 71%</small></label><input id="c" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
+    <div class="f lk"><label for="d">نسبة التوصيل (%) <span class="lock">🔒</span><small id="dHint">معدل لبنان 61%</small></label><input id="d" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
     <div class="f"><label for="q">الكمية (قطعة)<small>الحد الأدنى 50</small></label><input id="q" type="number" inputmode="numeric" step="10" min="50"></div>
     <label class="chk"><input id="test" type="checkbox"> إضافة تكلفة اختبار المنتجات</label>
   </section>
@@ -193,7 +198,7 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 
 <button type="button" class="fab" id="fab" aria-controls="chat" aria-expanded="false">💬 اسأل MDM Express</button>
 <section class="chat" id="chat" role="dialog" aria-label="مساعد أسئلة التجار">
-  <div class="hdr"><div><b>مساعد MDM Express</b><small>إجابات سريعة عن أسئلة التجار في لبنان</small></div><button type="button" class="x" id="chatX" aria-label="إغلاق">×</button></div>
+  <div class="hdr"><div><b>مساعد MDM Express</b><small id="chatSub">إجابات سريعة عن أسئلة التجار في لبنان</small></div><button type="button" class="x" id="chatX" aria-label="إغلاق">×</button></div>
   <div class="log" id="log" aria-live="polite"></div>
   <div class="chips" id="chips"></div>
   <form id="ask"><input id="q2" type="text" autocomplete="off" placeholder="اكتب سؤالك هنا…" aria-label="سؤالك"><button type="submit">إرسال</button></form>
@@ -202,30 +207,54 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 <script>
 {
 const $=id=>document.getElementById(id);
-const BASE={src:'15',price:3,w:0.3,q:50,test:true};
-const PRESETS={
-  best:{cpl:2,c:82,d:68},
-  avg:{cpl:2.5,c:71,d:61},
-  safe:{cpl:3,c:65,d:55,cut:0.10}
+const BASE={price:3,w:0.3,q:50,test:true};
+// Market parameters (from MDM pricing calculator + platform statistics, Nov 2026)
+// svc per delivered order = a + b/d + g/(c*d)  (returns and per-lead fees spread over delivered orders)
+const COUNTRIES={
+  lb:{name:'لبنان',adj:'اللبناني',cur:'$',fx:1,step:1,
+      srcs:[['15','الصين — مستحضرات التجميل ($15/كغ)'],['14','الصين — إلكترونيات ($14/كغ)'],['10.5','الصين — أدوات ($10.5/كغ)'],['11','دبي — كل الفئات ($11/كغ)']],
+      svc:{a:6.05,b:0.8,g:0},
+      sc:{best:{cpl:2,c:82,d:68},avg:{cpl:2.5,c:71,d:61},safe:{cpl:3,c:65,d:55,cut:0.10}}},
+  iq:{name:'العراق',adj:'العراقي',cur:'د.ع',fx:1700,step:1000,
+      srcs:[['12','الصين ($12/كغ)'],['8','دبي ($8/كغ)']],
+      svc:{a:3.6706,b:1.8824,g:0.18824},
+      sc:{best:{cpl:2,c:86,d:69},avg:{cpl:2.5,c:72,d:59},safe:{cpl:3,c:66,d:53,cut:0.10}}}
 };
+let K='lb', CT=COUNTRIES.lb;
+const svcOf=(c,d)=>CT.svc.a+CT.svc.b/d+CT.svc.g/(c*d);
+const loc=v=>CT.fx===1?'$'+Math.round(v).toLocaleString('en-US'):Math.round(v).toLocaleString('en-US')+' دينار';
+const locP=usd=>CT.fx===1?money0(usd):loc(usd*CT.fx)+' ('+money(usd)+')';
+let PRESETS=COUNTRIES.lb.sc;
 // System sale price: computed from product cost with the best-scenario rates (82% x 68%, CPL $2).
 // Up to $40: profit fixed at $10 per delivered order. Above $40 (expensive product): profit = 25% of the
 // sale price (continuous at $40) and CPL rises by $0.05 for every $1 above $40. Rounded up to a whole dollar.
-const PR={c:0.82,d:0.68,cpl:2,T:10,cap:40,share:0.25,cplStep:0.05};
+const PR={cpl:2,T:10,cap:40,share:0.25,cplStep:0.05};
 const cplFor=(base,P)=>+(base+PR.cplStep*Math.max(0,P-PR.cap)).toFixed(2);
+// returns {usd, local}: computed with the country's best-scenario rates, rounded UP to the local step
 function sysPrice(price,w,rate){
-  const C=price+rate*w; let P=30;
+  const C=price+rate*w, bc=PRESETS.best.c/100, bd=PRESETS.best.d/100; let P=30;
   for(let i=0;i<40;i++){
-    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+6.05+0.8/PR.d;
+    const X=C+cplFor(PR.cpl,P)/(bc*bd)+svcOf(bc,bd);
     let n=1.05*(X+PR.T); if(n>PR.cap)n=X/(1/1.05-PR.share);
     if(Math.abs(n-P)<1e-6)break; P=n;
   }
-  return Math.ceil(P-1e-9);
+  const local=Math.ceil(P*CT.fx/CT.step-1e-9)*CT.step;
+  return{usd:local/CT.fx,local};
 }
+// cautious scenario: 10% below the system price, but never below a $3 profit per delivered order
+const SAFE_MIN=3;
+function scenLocal(p,ref,C){
+  if(!p.cut)return ref.local;
+  const c=p.c/100,d=p.d/100; let P=ref.usd*(1-p.cut);
+  for(let i=0;i<40;i++){const n=1.05*(C+cplFor(p.cpl,P)/(c*d)+svcOf(c,d)+SAFE_MIN);if(Math.abs(n-P)<1e-6)break;P=n}
+  const floor=Math.ceil(P*CT.fx/CT.step-1e-9)*CT.step, cut=Math.round(ref.local*(1-p.cut)/CT.step)*CT.step;
+  return Math.min(ref.local,Math.max(cut,floor));
+}
+const cutPct=(local,ref)=>Math.round((1-local/ref.local)*100);
 let cur='best';
 const fields=['src','price','w','sale','cpl','c','d','q'];
 const prodFields=['src','price','w','q'], lockFields=['sale','cpl','c','d'];
-const AVG_T=0.71*0.61;
+let AVG_T=0.71*0.61;
 const money=v=>(v<0?'-':'')+'$'+Math.abs(v).toFixed(2);
 const money0=v=>(v<0?'-':'')+'$'+Math.round(Math.abs(v)).toLocaleString('en-US');
 const pct=v=>(v*100).toFixed(1)+'%';
@@ -241,36 +270,51 @@ try{const t=localStorage.getItem('mdm-theme');if(t)document.documentElement.data
 function applyScenario(){
   const p=PRESETS[cur], n=k=>Math.max(0,parseFloat($(k).value)||0);
   const ref=sysPrice(n('price'),n('w'),parseFloat($('src').value));
-  const P=p.cut?Math.round(ref*(1-p.cut)):ref, cpl=cplFor(p.cpl,P);
-  $('sale').value=P;$('cpl').value=cpl;$('c').value=p.c;$('d').value=p.d;
-  const exp=ref>PR.cap, rule=exp?`منتج غالٍ (فوق ${PR.cap}$): ربح 25% من سعر البيع`:`ربح ${PR.T}$ للطلبية الموصلة`;
-  $('saleHint').textContent=p.cut?`محسوب من تكلفة المنتج، ثم مخفّض 10% في هذا السيناريو`:'محسوب من تكلفة المنتج — '+rule+' في أفضل سيناريو';
+  const local=scenLocal(p,ref,n('price')+parseFloat($('src').value)*n('w')), P=local/CT.fx, cpl=cplFor(p.cpl,P);
+  $('sale').value=local;$('cpl').value=cpl;$('c').value=p.c;$('d').value=p.d;
+  const exp=ref.usd>PR.cap, rule=exp?`منتج غالٍ (فوق ${PR.cap}$): ربح 25% من سعر البيع`:`ربح ${PR.T}$ للطلبية الموصلة`;
+  const usdNote=CT.fx===1?'':` — يعادل ${money(P)}`;
+  $('saleHint').textContent=(p.cut?`محسوب من تكلفة المنتج، ثم مخفّض ${cutPct(local,ref)}% في هذا السيناريو`:'محسوب من تكلفة المنتج — '+rule+' في أفضل سيناريو')+usdNote;
   $('cplHint').textContent=cpl>p.cpl?`${p.cpl}$ + زيادة لأن سعر البيع فوق ${PR.cap}$`:'حسب السيناريو';
+  const sb=PRESETS.best, sa=PRESETS.avg, ss=PRESETS.safe;
   const notes={
-    best:`أفضل سيناريو: نسب أفضل المنتجات أداءً على منصّتنا في لبنان (تأكيد 82% وتوصيل 68%). سعر البيع ${P}$ يحدّده النظام ليعطيك ${exp?'25% من السعر ربحًا':'ربحًا قدره '+PR.T+'$'} عن كل طلبية موصلة.`,
-    avg:`متوسط لبنان: معدل كل الطلبيات على منصّتنا (تأكيد 71% وتوصيل 61%)، بنفس سعر البيع ${P}$.`,
-    safe:`سيناريو حذر: نسب أقل من المعدل (تأكيد 65% وتوصيل 55%) لمعرفة أسوأ ما قد يحدث. ⚠️ ملاحظة: تم تخفيض سعر البيع في هذا السيناريو بنسبة 10%، من ${ref}$ إلى ${P}$.`};
+    best:`أفضل سيناريو: نسب أفضل المنتجات أداءً على منصّتنا في ${CT.name} (تأكيد ${sb.c}% وتوصيل ${sb.d}%). سعر البيع ${locP(P)} يحدّده النظام ليعطيك ${exp?'25% من السعر ربحًا':'ربحًا قدره '+PR.T+'$'} عن كل طلبية موصلة.`,
+    avg:`متوسط ${CT.name}: معدل الطلبيات على منصّتنا (تأكيد ${sa.c}% وتوصيل ${sa.d}%)، بنفس سعر البيع ${locP(P)}.`,
+    safe:`سيناريو حذر: نسب أقل من المعدل (تأكيد ${ss.c}% وتوصيل ${ss.d}%) لمعرفة أسوأ ما قد يحدث. ⚠️ ملاحظة: تم تخفيض سعر البيع في هذا السيناريو بنسبة ${cutPct(local,ref)}%، من ${locP(ref.usd)} إلى ${locP(P)}، مع ضمان ربح لا يقل عن ${SAFE_MIN}$ للطلبية الموصلة.`};
   $('presetNote').textContent=notes[cur];
 }
+function setCountry(k){
+  K=COUNTRIES[k]?k:'lb';CT=COUNTRIES[K];PRESETS=CT.sc;AVG_T=CT.sc.avg.c/100*CT.sc.avg.d/100;
+  const prev=$('src').value;
+  $('src').innerHTML=CT.srcs.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
+  if(CT.srcs.some(o=>o[0]===prev))$('src').value=prev;
+  $('hCountry').textContent=CT.name;$('avgBtn').textContent='متوسط '+CT.name;
+  $('cHint').textContent=`معدل ${CT.name} ${CT.sc.avg.c}%`;$('dHint').textContent=`معدل ${CT.name} ${CT.sc.avg.d}%`;
+  $('saleCur').textContent=CT.cur;
+  document.querySelectorAll('#countries button').forEach(b=>b.classList.toggle('on',b.dataset.k===K));
+  try{history.replaceState(null,'','#'+K)}catch(e){}
+  SC_NAMES.avg='متوسط '+CT.name;
+  window.mdmCountry=K;if(window.mdmSetCountry)window.mdmSetCountry(K);
+  setPreset(cur);
+}
 function setPreset(k){cur=k;const p=PRESETS[k];
-  if(!$('price').value){const o=BASE;prodFields.forEach(f=>{$(f).value=o[f]});$('test').checked=o.test}
   lockFields.forEach(f=>{$(f).readOnly=true;$(f).closest('.f').classList.add('locked')});
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));applyScenario();render()}
 function read(){
   const n=k=>Math.max(0,parseFloat($(k).value)||0);
-  return{rate:parseFloat($('src').value),price:n('price'),w:n('w'),P:n('sale'),cpl:n('cpl'),
+  return{rate:parseFloat($('src').value),price:n('price'),w:n('w'),P:n('sale')/CT.fx,cpl:n('cpl'),
     c:Math.min(1,Math.max(0.01,n('c')/100)),d:Math.min(1,Math.max(0.01,n('d')/100)),q:Math.max(1,Math.round(n('q'))),test:$('test').checked}
 }
 // fees = MDM service (6.85 per delivered + 0.80 per returned, spread over delivered) + COD 5% (as in MDM calculator: price = costs x 1.05)
 function calc(x,o={}){
   const c=o.c??x.c, d=o.d??x.d, cpl=o.cpl??x.cpl;
-  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=6.05+0.8/d, cod=x.P-x.P/1.05, fees=svc+cod;
+  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=svcOf(c,d), cod=x.P-x.P/1.05, fees=svc+cod;
   return{C,ad,svc,cod,fees,profit:x.P-C-ad-fees,t:c*d};
 }
 function breakeven(x,r){
   const price=(r.C+r.ad+r.svc)*1.05;
   const cpl=(x.P/1.05-r.C-r.svc)*x.c*x.d;
-  const den=x.P/1.05-r.C-6.05, d=den>0?(x.cpl/x.c+0.8)/den:Infinity;
+  const den=x.P/1.05-r.C-CT.svc.a, d=den>0?(x.cpl/x.c+CT.svc.b+CT.svc.g/x.c)/den:Infinity;
   return{price,cpl,t:d<=1?x.c*d:Infinity};
 }
 let S=null;
@@ -284,14 +328,14 @@ function render(){
   $('pbS').textContent=x.q+' طلبية موصلة'+(x.test?'، والاختبار محسوب في رأس المال':'');
   $('h1').classList.toggle('loss',r.profit<0);$('h2').classList.toggle('loss',batch<0);
   $('verdict').textContent=verdict(x,r,be);
-  $('bePrice').textContent=money(be.price);$('bePriceS').textContent='سعرك أعلى منه بـ '+money(x.P-be.price);
+  $('bePrice').textContent=CT.fx===1?money(be.price):loc(Math.ceil(be.price*CT.fx/250)*250);$('bePriceS').textContent='سعرك أعلى منه بـ '+money(x.P-be.price);
   $('beCpl').textContent=be.cpl>0?money(be.cpl):'—';$('beCplS').textContent=be.cpl>0?'تكلفتك الحالية '+money(x.cpl):'لا يغطي السعر التكاليف';
   $('beT').textContent=be.t<=1?pct(be.t):'—';$('beTS').textContent='نسبتك '+pct(r.t)+' ('+pct0(x.c)+' تأكيد × '+pct0(x.d)+' توصيل)';
   // breakdown
   const parts=[['المنتج مع الشحن',r.C,'--s1'],['الإعلان لكل طلبية موصلة',r.ad,'--s2'],['رسوم MDM Express (الخدمة + COD)',r.fees,'--s3'],[r.profit>=0?'ربحك':'الخسارة',r.profit,r.profit>=0?'--s5':'--neg']];
   const tot=parts.reduce((s,p)=>s+Math.abs(p[1]),0)||1;
   $('bar').innerHTML=parts.map(p=>`<i title="${p[0]}" style="flex:${Math.abs(p[1])/tot} 1 0;background:var(${p[2]})"></i>`).join('');
-  $('brk').innerHTML=parts.map(p=>`<tr><td><span class="sw" style="background:var(${p[2]})"></span>${p[0]}</td><td class="n ${p[1]<0?'neg':''}">${money(p[1])}</td><td class="n m">${x.P?pct(p[1]/x.P):'—'}</td></tr>`).join('')+`<tr class="sum"><td>سعر البيع</td><td class="n">${money(x.P)}</td><td class="n">100%</td></tr>`;
+  $('brk').innerHTML=parts.map(p=>`<tr><td><span class="sw" style="background:var(${p[2]})"></span>${p[0]}</td><td class="n ${p[1]<0?'neg':''}">${money(p[1])}</td><td class="n m">${x.P?pct(p[1]/x.P):'—'}</td></tr>`).join('')+`<tr class="sum"><td>سعر البيع</td><td class="n">${CT.fx===1?money(x.P):loc(x.P*CT.fx)+' ('+money(x.P)+')'}</td><td class="n">100%</td></tr>`;
   // sensitivity on total delivered rate (confirmation fixed)
   let ts=[0.35,0.4,0.45,0.5,0.55,0.6].filter(t=>t<=x.c+1e-9);
   if(!ts.some(t=>Math.abs(t-r.t)<0.0005))ts.push(r.t);ts.sort((a,b)=>a-b);
@@ -324,26 +368,26 @@ function verdict(x,r,be){
   if(r.t-be.t<0.08)return 'المنتج رابح، لكن نسبة الطلبيات الموصلة قريبة من نقطة التعادل.';
   return 'المنتج رابح وآمن: يبقى رابحًا ما دام أكثر من '+pct(be.t)+' من إجمالي الطلبيات يصل إلى الزبون، وما دامت تكلفة الطلبية أقل من '+money(be.cpl)+'.';
 }
-const SC_NAMES={best:'أفضل سيناريو',avg:'متوسط لبنان',safe:'السيناريو الحذر'};
+var SC_NAMES={best:'أفضل سيناريو',avg:'متوسط لبنان',safe:'السيناريو الحذر'};
 function scenarioRun(k,x){
-  const p=PRESETS[k], ref=sysPrice(x.price,x.w,x.rate), P=p.cut?Math.round(ref*(1-p.cut)):ref, cpl=cplFor(p.cpl,P);
+  const p=PRESETS[k], ref=sysPrice(x.price,x.w,x.rate), local=scenLocal(p,ref,x.price+x.rate*x.w), P=local/CT.fx, cpl=cplFor(p.cpl,P);
   const y=Object.assign({},x,{P,cpl,c:p.c/100,d:p.d/100}); const r=calc(y);
   return{P,cpl,c:p.c,d:p.d,profit:r.profit,batch:r.profit*x.q};
 }
 function message(){
-  const {x,r,be,batch,testCost}=S, L=[], ref=sysPrice(x.price,x.w,x.rate), exp=ref>PR.cap;
+  const {x,r,be,batch,testCost}=S, L=[], ref=sysPrice(x.price,x.w,x.rate), exp=ref.usd>PR.cap;
   const stock=r.C*x.q, back=r.profit+r.C, rec=back>0?Math.ceil((stock+testCost)/back):Infinity;
-  L.push('السلام عليكم ورحمة الله وبركاته 🙏','إليك تحليل منتجك في السوق اللبناني بحسب بيانات منتجك:','');
+  L.push('السلام عليكم ورحمة الله وبركاته 🙏','إليك تحليل منتجك في السوق '+CT.adj+' بحسب بيانات منتجك:','');
   L.push('📦 منتجك');
-  L.push('• تكلفة القطعة مع الشحن إلى لبنان: '+money(r.C)+'.');
+  L.push('• تكلفة القطعة مع الشحن إلى '+CT.name+': '+money(r.C)+'.');
   const rule=(exp?'ربحًا قدره 25% من سعر البيع':'ربحًا قدره '+PR.T+' دولارات')+' عن كل طلبية موصلة في أفضل سيناريو';
-  if(PRESETS[cur].cut)L.push('• سعر البيع في هذا السيناريو: '+money0(x.P)+'، أي أقل بـ10% من السعر الذي يحدّده نظامنا ('+money0(ref)+') ليعطيك '+rule+'.');
-  else L.push('• سعر البيع: '+money0(x.P)+'، يحدّده نظامنا من تكلفة المنتج ليعطيك '+rule+'.');
+  if(PRESETS[cur].cut)L.push('• سعر البيع في هذا السيناريو: '+locP(x.P)+'، أي أقل بـ'+cutPct(Math.round(x.P*CT.fx),ref)+'% من السعر الذي يحدّده نظامنا ('+locP(ref.usd)+') ليعطيك '+rule+'.');
+  else L.push('• سعر البيع: '+locP(x.P)+'، يحدّده نظامنا من تكلفة المنتج ليعطيك '+rule+'.');
   const nm=SC_NAMES[cur], avg=scenarioRun('avg',x);
   L.push('','📈 ربحك حسب أداء منتجك');
-  L.push('يختلف ربحك حسب عدد الطلبات التي تُؤكَّد ويستلمها الزبون فعلًا. هذه ثلاث حالات مبنية على أرقام منصّتنا في لبنان:');
-  const desc={best:'أداء أفضل المنتجات على منصّتنا',avg:'متوسط كل الطلبيات على منصّتنا، وهو الأقرب للواقع',safe:'أداء أقل من المتوسط، مع سعر بيع أقل بـ10%'};
-  ['best','avg','safe'].forEach(k=>{const z=scenarioRun(k,x);L.push('• '+SC_NAMES[k]+'، '+desc[k]+' ('+z.c+'% تأكيد، '+z.d+'% توصيل، سعر '+money0(z.P)+'): ربح '+money(z.profit)+' للطلبية، و'+money0(z.batch)+' لـ'+x.q+' قطعة.')});
+  L.push('يختلف ربحك حسب عدد الطلبات التي تُؤكَّد ويستلمها الزبون فعلًا. هذه ثلاث حالات مبنية على أرقام منصّتنا في '+CT.name+':');
+  const desc={best:'أداء أفضل المنتجات على منصّتنا',avg:'متوسط كل الطلبيات على منصّتنا، وهو الأقرب للواقع',safe:'أداء أقل من المتوسط، مع سعر بيع أقل وربح لا يقل عن 3$'};
+  ['best','avg','safe'].forEach(k=>{const z=scenarioRun(k,x);L.push('• '+SC_NAMES[k]+'، '+desc[k]+' ('+z.c+'% تأكيد، '+z.d+'% توصيل، سعر '+locP(z.P)+'): ربح '+money(z.profit)+' للطلبية، و'+money0(z.batch)+' لـ'+x.q+' قطعة.')});
   L.push('','📊 التفاصيل حسب '+nm+'، السيناريو المختار في الحاسبة ('+pct0(x.c)+' تأكيد و'+pct0(x.d)+' توصيل)');
   L.push('• ربحك عن كل طلبية موصلة: '+money(r.profit)+'. الطلبية الموصلة هي التي استلمها الزبون ودفع ثمنها، وعليها وحدها يُحسب الربح.');
   L.push('• صافي ربح '+x.q+' قطعة: '+money0(batch)+'.');
@@ -358,10 +402,10 @@ function message(){
     L.push('• تكلفة الطلب في الإعلان، أي ما تدفعه للإعلان مقابل كل طلب يصلك، محسوبة هنا بـ'+money(x.cpl)+'، وتبقى رابحًا ما دامت أقل من '+money(be.cpl)+'.');
   }
   L.push('','💡 توصياتنا');
-  L.push('• خطّط لرأس مالك وأرباحك على أساس متوسط لبنان لا أفضل سيناريو، فهو الأقرب للواقع: ربح '+money(avg.profit)+' للطلبية، و'+money0(avg.batch)+' لـ'+x.q+' قطعة. وما يزيد على ذلك مكسب إضافي.');
+  L.push('• خطّط لرأس مالك وأرباحك على أساس '+SC_NAMES.avg+' لا أفضل سيناريو، فهو الأقرب للواقع: ربح '+money(avg.profit)+' للطلبية، و'+money0(avg.batch)+' لـ'+x.q+' قطعة. وما يزيد على ذلك مكسب إضافي.');
   L.push('• اختبر المنتج بالإعلانات قبل طلب الكمية'+(x.test?'، وتكلفة الوصول إلى منتج رابح نحو '+money0(testCost)+'.':'.'));
-  if(avg.profit>0)L.push('• كلما زادت الكمية زاد ربحك: عند طلب 100 قطعة بمتوسط لبنان، يصل صافي الربح إلى نحو '+money0(avg.profit*100)+'.');
-  if(x.q<50)L.push('• الحد الأدنى لطلب المنتج في لبنان 50 قطعة.');
+  if(avg.profit>0)L.push('• كلما زادت الكمية زاد ربحك: عند طلب 100 قطعة حسب '+SC_NAMES.avg+'، يصل صافي الربح إلى نحو '+money0(avg.profit*100)+'.');
+  if(x.q<50)L.push('• الحد الأدنى لطلب المنتج في '+CT.name+' 50 قطعة.');
   L.push('','لمعرفة التفاصيل والبدء معنا، تواصل مع فريقنا على الرقم:','+218 91-2635665','','أو سجّل عبر هذا الرابط:','https://linktr.ee/MDM_Express','','وسيتواصل معك فريقنا في أقرب وقت 🙏');
   return L.join('\n');
 }
@@ -409,7 +453,9 @@ $('copy').addEventListener('click',()=>{navigator.clipboard.writeText($('msgbox'
 $('themeBtn').addEventListener('click',()=>setTheme(curTheme()==='dark'?'light':'dark'));
 sysDark.addEventListener('change',()=>{if(!document.documentElement.dataset.theme){paintThemeBtn();render()}});
 paintThemeBtn();
-setPreset('best');
+document.querySelectorAll('#countries button').forEach(b=>b.addEventListener('click',()=>setCountry(b.dataset.k)));
+if(!$('price').value){prodFields.filter(f=>f!=='src').forEach(f=>{$(f).value=BASE[f]});$('test').checked=BASE.test}
+setCountry((location.hash||'').replace('#','')||'lb');
 }
 
 {
@@ -423,7 +469,7 @@ const FAQ=[
   a:'لا. تدفع مقدمًا ثمن البضاعة والشحن فقط، أما رسوم الخدمة والتحصيل فتُخصم من المبلغ الذي نحصّله من الزبون بعد التوصيل.'},
  {q:'متى أستلم أرباحي؟',k:['متي استلم','ارباحي','فلوسي','اموالي','التحويل','دفعات','اسبوعي','سحب','استلم المال','تحويل الارباح'],
   a:'تصلك أرباحك في دفعات أسبوعية، بالدولار أو بالليرة اللبنانية.'},
- {q:'بأي عملة يكون البيع؟',k:['عمله','بالدولار','بالليره','باي عمله'],
+ {q:'بأي عملة يكون البيع؟',k:['عمله','بالدولار','بالليره','باي عمله','دينار','بالدينار'],
   a:'البيع في السوق اللبناني بالدولار.'},
  {q:'كم تكلفة شحن البضاعة إلى لبنان؟',k:['شحن البضاعه','تكلفه الشحن','سعر الشحن','الكيلو','كيلو','كغ','الصين','دبي','استيراد'],
   a:'من الصين: 15$ للكيلوغرام لمستحضرات التجميل، و14$ للإلكترونيات، و10.5$ للأدوات.\nمن دبي: 11$ للكيلوغرام لكل الفئات.'},
@@ -431,7 +477,7 @@ const FAQ=[
   a:'الحد الأدنى 50 قطعة لكل منتج.'},
  {q:'كيف تؤكدون الطلبيات؟',k:['تاكيد','تاكدون','تتصلون','اتصال','كول سنتر','call'],
   a:'يتصل فريقنا بكل زبون لتأكيد طلبيته قبل الشحن.'},
- {q:'كم مدة التوصيل؟',k:['مده التوصيل','كم يوم','متي يوصل','متي توصل','وقت التوصيل','بيروت','جبل لبنان','البقاع','الجنوب','الساحل','سرعه التوصيل'],
+ {q:'كم مدة التوصيل؟',k:['مده التوصيل','كم يوم','متي يوصل','متي توصل','وقت التوصيل','بيروت','جبل لبنان','البقاع','الجنوب','الساحل','سرعه التوصيل','بغداد','البصره','اربيل','الموصل','كربلاء','النجف','السليمانيه','كركوك','الرمادي','الناصريه'],
   a:'بيروت وجبل لبنان: في اليوم نفسه.\nالساحل والبقاع والجنوب: خلال يوم إلى يومين.\nالطلبيات المؤكدة قبل الساعة 2 ظهرًا تُشحن في اليوم نفسه.'},
  {q:'ما نسب التأكيد والتوصيل في لبنان؟',k:['نسبه التاكيد','نسبه التوصيل','نسب التاكيد','نسب التوصيل','معدل','النسب'],
   a:'المتوسط على منصّتنا 71% تأكيد و61% توصيل، وتصل مع أفضل المنتجات إلى نحو 82% و68%.'},
@@ -458,6 +504,24 @@ const FAQ=[
  {q:'كم تكلفة اختبار المنتجات؟',k:['تكلفه الاختبار','كم يكلف الاختبار','ميزانيه الاختبار','سعر الاختبار','تكلفه التيست'],
   a:'تتراوح عادةً بين 70$ و105$ للوصول إلى منتج رابح واحد، حسب تكلفة الطلب في الإعلان.'}
 ];
+FAQ.push({q:'هل توصلون إلى كل المدن؟',only:'iq',k:['كل المدن','جميع المدن','كل المحافظات','جميع المحافظات','تغطيه','تغطون','توصلون الي','توصلون ل'],
+  a:'نعم، نوصل إلى كل المدن العراقية بمندوبينا، وتختلف المدة فقط حسب البعد عن بغداد.'});
+const IQ={
+ 0:{a:'عن كل طلبية موصلة تدفع ثمن الخدمة، نحو 7.3$ (قرابة 12,400 دينار)، إضافة إلى رسوم التحصيل (COD) بنسبة 5% من سعر البيع. مثلًا لمنتج سعره 48,000 دينار يكون الإجمالي نحو 14,700 دينار.'},
+ 2:{a:'تصلك أرباحك في دفعات أسبوعية بالدينار العراقي، مع كشف حساب لكل طلبية.'},
+ 3:{a:'البيع في السوق العراقي بالدينار العراقي، وتعرض الحاسبة ما يعادله بالدولار.'},
+ 4:{q:'كم تكلفة شحن البضاعة إلى العراق؟',a:'من الصين: 12$ للكيلوغرام.\nمن دبي: 8$ للكيلوغرام.'},
+ 6:{a:'يتصل فريقنا بكل زبون لتأكيد طلبيته قبل الشحن، بلغة محافظته العربية أو الكردية.'},
+ 7:{a:'بغداد والرمادي وكربلاء: يوم واحد.\nالنجف والديوانية وكركوك وتكريت: يوم إلى يومين.\nالبصرة والناصرية والعمارة، والموصل وأربيل والسليمانية: يومان إلى ثلاثة.\nالطلبيات المؤكدة قبل الساعة 2 ظهرًا تُشحن في اليوم نفسه.'},
+ 8:{q:'ما نسب التأكيد والتوصيل في العراق؟',a:'المتوسط على منصّتنا 72% تأكيد و59% توصيل، وتصل مع أفضل المنتجات إلى نحو 86% و69%.'},
+ 11:{q:'ما الفئات التي تنجح في العراق؟'},
+ 12:{a:'يحسبه النظام من تكلفة المنتج والشحن ليعطيك ربحًا قدره 10$ عن كل طلبية موصلة في أفضل سيناريو، ويُقرَّب إلى أقرب 1,000 دينار. وإذا تجاوز السعر ما يعادل 40$، يصبح الربح 25% من السعر.'},
+ 13:{a:'متوسط العراق، فهو الأقرب للواقع. وما يزيد على ذلك مكسب إضافي.'},
+ 14:{q:'هل يتوفر الدروب شيبينغ أو الأفلييت في العراق؟',a:'لا، هذه الخدمات غير متوفرة حاليًا في السوق العراقي.'},
+ 18:{a:'لأن النظام يحسبه من تكلفة منتجك ليضمن لك هامش ربح مناسبًا في السوق العراقي، فلا تبيع بسعر يُخسرك.'}
+};
+let FK='lb';
+const fq=i=>(FK==='iq'&&IQ[i]&&IQ[i].q)||FAQ[i].q, fa=i=>(FK==='iq'&&IQ[i]&&IQ[i].a)||FAQ[i].a;
 const QUICK=[0,1,2,5,7,13];
 const norm=t=>(' '+t+' ').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[؟?!.,،]/g,' ').replace(/\s+/g,' ');
 const FAQN=FAQ.map(f=>f.k.map(norm).map(k=>k.trim()));
@@ -465,8 +529,8 @@ function answer(text){
   const t=norm(text);
   if(/ (السلام|سلام|مرحبا|اهلا|هلا|hello|hi) /.test(t)&&t.trim().split(' ').length<=4)return 'وعليكم السلام ورحمة الله 🙏 أهلًا بك في MDM Express. اكتب سؤالك، أو اختر من الأسئلة السريعة.';
   let best=-1,score=0;
-  FAQN.forEach((ks,i)=>{let sc=0;ks.forEach(k=>{if(t.includes(k))sc+=k.length});if(sc>score){score=sc;best=i}});
-  return best>=0&&score>=3?FAQ[best].a:CONTACT;
+  FAQN.forEach((ks,i)=>{if(FAQ[i].only&&FAQ[i].only!==FK)return;let sc=0;ks.forEach(k=>{if(t.includes(k))sc+=k.length});if(sc>score){score=sc;best=i}});
+  return best>=0&&score>=3?fa(best):CONTACT;
 }
 function bubble(text,who){
   const d=document.createElement('div');d.className='bub '+who;
@@ -476,7 +540,9 @@ function bubble(text,who){
   $('log').appendChild(d);$('log').scrollTop=$('log').scrollHeight;
 }
 function ask(text){text=text.trim();if(!text)return;bubble(text,'me');setTimeout(()=>bubble(answer(text),'bot'),250)}
-QUICK.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=FAQ[i].q;b.addEventListener('click',()=>ask(FAQ[i].q));$('chips').appendChild(b)});
+function buildChips(){$('chips').innerHTML='';QUICK.forEach(i=>{const b=document.createElement('button');b.type='button';b.textContent=fq(i);b.addEventListener('click',()=>ask(fq(i)));$('chips').appendChild(b)})}
+window.mdmSetCountry=k=>{FK=k==='iq'?'iq':'lb';$('chatSub').textContent='إجابات سريعة عن أسئلة التجار في '+(FK==='iq'?'العراق':'لبنان');buildChips()};
+window.mdmSetCountry(window.mdmCountry||'lb');
 let greeted=false;
 function toggleChat(open){$('chat').classList.toggle('open',open);$('fab').setAttribute('aria-expanded',open);
   if(open&&!greeted){greeted=true;bubble('أهلًا بك في MDM Express 👋 اكتب سؤالك عن الرسوم أو الشحن أو التوصيل أو الأرباح، أو اختر من الأسئلة السريعة.','bot')}
