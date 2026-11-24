@@ -39,6 +39,8 @@ input,select{font:inherit;font-size:16px;width:100%;min-height:44px;border:1px s
 select{direction:rtl;text-align:start}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--red);outline-offset:2px}
 .sel{grid-template-columns:minmax(0,1fr)}
+input[readonly]{background:var(--panel);border-style:dashed;color:var(--ink2);cursor:not-allowed}
+.lock{display:none;font-size:12px;color:var(--muted);font-weight:600}.locked .lock{display:inline}
 .chk{display:flex;gap:10px;align-items:center;padding:12px 0 2px;font-weight:600}.chk input{width:22px;min-height:22px}
 button{font:inherit;font-weight:700;min-height:44px;border-radius:12px;border:0;padding:8px 18px;cursor:pointer}
 .btn{background:var(--red);color:#fff}.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
@@ -102,11 +104,11 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
       </select></div>
     <div class="f"><label for="price">سعر القطعة ($)</label><input id="price" type="number" inputmode="decimal" step="0.1" min="0"></div>
     <div class="f"><label for="w">وزن القطعة (كغ)</label><input id="w" type="number" inputmode="decimal" step="0.05" min="0"></div>
-    <div class="f"><label for="sale">سعر البيع ($)<small>السعر الذي يدفعه الزبون</small></label><input id="sale" type="number" inputmode="decimal" step="0.5" min="0"></div>
+    <div class="f lk"><label for="sale">سعر البيع ($) <span class="lock">🔒 يحدّده النظام</span><small id="saleHint">السعر الذي يدفعه الزبون</small></label><input id="sale" type="number" inputmode="decimal" step="0.5" min="0"></div>
     <h2 style="margin-top:18px">الإعلان والنسب</h2>
-    <div class="f"><label for="cpl">تكلفة الطلبية في الإعلان ($)<small>عادةً بين 2 و3</small></label><input id="cpl" type="number" inputmode="decimal" step="0.1" min="0"></div>
-    <div class="f"><label for="c">نسبة التأكيد (%)<small>معدل لبنان 71%</small></label><input id="c" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
-    <div class="f"><label for="d">نسبة التوصيل (%)<small>معدل لبنان 61%</small></label><input id="d" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
+    <div class="f lk"><label for="cpl">تكلفة الطلبية في الإعلان ($) <span class="lock">🔒</span><small id="cplHint">عادةً بين 2 و3</small></label><input id="cpl" type="number" inputmode="decimal" step="0.1" min="0"></div>
+    <div class="f lk"><label for="c">نسبة التأكيد (%) <span class="lock">🔒</span><small>معدل لبنان 71%</small></label><input id="c" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
+    <div class="f lk"><label for="d">نسبة التوصيل (%) <span class="lock">🔒</span><small>معدل لبنان 61%</small></label><input id="d" type="number" inputmode="decimal" step="1" min="1" max="100"></div>
     <div class="f"><label for="q">الكمية (قطعة)<small>الحد الأدنى 50</small></label><input id="q" type="number" inputmode="numeric" step="10" min="50"></div>
     <label class="chk"><input id="test" type="checkbox"> إضافة تكلفة اختبار المنتجات</label>
   </section>
@@ -172,11 +174,27 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 const $=id=>document.getElementById(id);
 const BASE={src:'15',price:3,w:0.3,q:50,test:true};
 const PRESETS={
-  best:{sale:30,cpl:2,c:82,d:68,note:'أفضل سيناريو: نسب أفضل المنتجات أداءً على منصّتنا في لبنان (تأكيد 82% وتوصيل 68%)، وتكلفة طلبية 2$، وهامش ربح يتجاوز 10$.'},
-  avg:{sale:30,cpl:2.5,c:71,d:61,note:'متوسط لبنان: معدل كل الطلبيات على منصّتنا (تأكيد 71% وتوصيل 61%)، وتكلفة طلبية 2.5$، بنفس سعر البيع 30$.'},
-  safe:{sale:27,cpl:3,c:65,d:55,note:'سيناريو حذر: نسب أقل من المعدل وتكلفة طلبية 3$، لمعرفة أسوأ ما قد يحدث. ⚠️ ملاحظة: تم تخفيض سعر البيع في هذا السيناريو من 30$ إلى 27$.'}
+  best:{cpl:2,c:82,d:68},
+  avg:{cpl:2.5,c:71,d:61},
+  safe:{cpl:3,c:65,d:55,cut:0.10}
 };
+// System sale price: computed from product cost with the best-scenario rates (82% x 68%, CPL $2).
+// Up to $40: profit fixed at $10 per delivered order. Above $40 (expensive product): profit = 25% of the
+// sale price (continuous at $40) and CPL rises by $0.05 for every $1 above $40. Rounded up to a whole dollar.
+const PR={c:0.82,d:0.68,cpl:2,T:10,cap:40,share:0.25,cplStep:0.05};
+const cplFor=(base,P)=>+(base+PR.cplStep*Math.max(0,P-PR.cap)).toFixed(2);
+function sysPrice(price,w,rate){
+  const C=price+rate*w; let P=30;
+  for(let i=0;i<40;i++){
+    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+6.05+0.8/PR.d;
+    let n=1.05*(X+PR.T); if(n>PR.cap)n=X/(1/1.05-PR.share);
+    if(Math.abs(n-P)<1e-6)break; P=n;
+  }
+  return Math.ceil(P-1e-9);
+}
+let cur='best';
 const fields=['src','price','w','sale','cpl','c','d','q'];
+const prodFields=['src','price','w','q'], lockFields=['sale','cpl','c','d'];
 const AVG_T=0.71*0.61;
 const money=v=>(v<0?'-':'')+'$'+Math.abs(v).toFixed(2);
 const money0=v=>(v<0?'-':'')+'$'+Math.round(Math.abs(v)).toLocaleString('en-US');
@@ -190,8 +208,24 @@ function paintThemeBtn(){$('themeBtn').textContent=curTheme()==='dark'?'☀️ �
 function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('mdm-theme',t)}catch(e){}paintThemeBtn();render()}
 try{const t=localStorage.getItem('mdm-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
 
-function setPreset(k){const p=PRESETS[k];const o=Object.assign({},BASE,p);fields.forEach(f=>{$(f).value=o[f]});$('test').checked=o.test;
-  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));$('presetNote').textContent=p.note;render()}
+function applyScenario(){
+  const p=PRESETS[cur], n=k=>Math.max(0,parseFloat($(k).value)||0);
+  const ref=sysPrice(n('price'),n('w'),parseFloat($('src').value));
+  const P=p.cut?Math.round(ref*(1-p.cut)):ref, cpl=cplFor(p.cpl,P);
+  $('sale').value=P;$('cpl').value=cpl;$('c').value=p.c;$('d').value=p.d;
+  const exp=ref>PR.cap, rule=exp?`منتج غالٍ (فوق ${PR.cap}$): ربح 25% من سعر البيع`:`ربح ${PR.T}$ للطلبية الموصلة`;
+  $('saleHint').textContent=p.cut?`محسوب من تكلفة المنتج، ثم مخفّض 10% في هذا السيناريو`:'محسوب من تكلفة المنتج — '+rule+' في أفضل سيناريو';
+  $('cplHint').textContent=cpl>p.cpl?`${p.cpl}$ + زيادة لأن سعر البيع فوق ${PR.cap}$`:'حسب السيناريو';
+  const notes={
+    best:`أفضل سيناريو: نسب أفضل المنتجات أداءً على منصّتنا في لبنان (تأكيد 82% وتوصيل 68%). سعر البيع ${P}$ يحدّده النظام ليعطيك ${exp?'25% من السعر ربحًا':'ربحًا قدره '+PR.T+'$'} عن كل طلبية موصلة.`,
+    avg:`متوسط لبنان: معدل كل الطلبيات على منصّتنا (تأكيد 71% وتوصيل 61%)، بنفس سعر البيع ${P}$.`,
+    safe:`سيناريو حذر: نسب أقل من المعدل (تأكيد 65% وتوصيل 55%) لمعرفة أسوأ ما قد يحدث. ⚠️ ملاحظة: تم تخفيض سعر البيع في هذا السيناريو بنسبة 10%، من ${ref}$ إلى ${P}$.`};
+  $('presetNote').textContent=notes[cur];
+}
+function setPreset(k){cur=k;const p=PRESETS[k];
+  if(!$('price').value){const o=BASE;prodFields.forEach(f=>{$(f).value=o[f]});$('test').checked=o.test}
+  lockFields.forEach(f=>{$(f).readOnly=true;$(f).closest('.f').classList.add('locked')});
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));applyScenario();render()}
 function read(){
   const n=k=>Math.max(0,parseFloat($(k).value)||0);
   return{rate:parseFloat($('src').value),price:n('price'),w:n('w'),P:n('sale'),cpl:n('cpl'),
@@ -325,7 +359,7 @@ function draw(){
   hit.addEventListener('pointerleave',()=>{svg.querySelector('#hov').style.display='none';tip.style.opacity=0});
 }
 const ro=new ResizeObserver(draw);ro.observe(svg);
-fields.forEach(k=>$(k).addEventListener('input',()=>{document.querySelectorAll('#presets button').forEach(b=>b.classList.remove('on'));$('presetNote').textContent='قيم معدّلة يدويًا.';render()}));
+prodFields.forEach(k=>$(k).addEventListener('input',()=>{applyScenario();render()}));
 $('test').addEventListener('change',render);
 document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.p)));
 $('copy').addEventListener('click',()=>{navigator.clipboard.writeText($('msgbox').textContent).then(()=>{$('msg').textContent='تم نسخ الرسالة، الصقها في المحادثة مع التاجر.'}).catch(()=>{$('msg').textContent='تعذّر النسخ التلقائي، حدّد النص في المربع وانسخه يدويًا.'})});
