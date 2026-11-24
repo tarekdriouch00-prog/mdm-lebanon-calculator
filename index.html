@@ -160,10 +160,10 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
     </div>
 
     <div class="card">
-      <h2>رسالة التحليل للتاجر</h2>
-      <p class="sub">تحليل وتوصيات تتغيّر حسب أرقامه، جاهزة للإرسال</p>
+      <h2>ملخص تحليل منتجك</h2>
+      <p class="sub">أرقامك وتوصياتنا لك، تتحدّث مع كل تعديل. انسخه واحتفظ به، أو أرسله إلى فريقنا لنبدأ معك.</p>
       <div class="msgbox" id="msgbox"></div>
-      <div class="row"><button class="btn" id="copy" type="button">نسخ الرسالة</button></div>
+      <div class="row"><button class="btn" id="copy" type="button">نسخ الملخص</button></div>
       <div class="msg" id="msg" aria-live="polite"></div>
     </div>
   </section>
@@ -362,7 +362,7 @@ const ro=new ResizeObserver(draw);ro.observe(svg);
 prodFields.forEach(k=>$(k).addEventListener('input',()=>{applyScenario();render()}));
 $('test').addEventListener('change',render);
 document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.p)));
-$('copy').addEventListener('click',()=>{navigator.clipboard.writeText($('msgbox').textContent).then(()=>{$('msg').textContent='تم نسخ الرسالة، الصقها في المحادثة مع التاجر.'}).catch(()=>{$('msg').textContent='تعذّر النسخ التلقائي، حدّد النص في المربع وانسخه يدويًا.'})});
+$('copy').addEventListener('click',()=>{navigator.clipboard.writeText($('msgbox').textContent).then(()=>{$('msg').textContent='تم نسخ الملخص، يمكنك إرساله إلى فريقنا على واتساب.'}).catch(()=>{$('msg').textContent='تعذّر النسخ التلقائي، حدّد النص في المربع وانسخه يدويًا.'})});
 $('themeBtn').addEventListener('click',()=>setTheme(curTheme()==='dark'?'light':'dark'));
 sysDark.addEventListener('change',()=>{if(!document.documentElement.dataset.theme){paintThemeBtn();render()}});
 paintThemeBtn();
