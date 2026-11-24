@@ -24,6 +24,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Cairo,system-
 header{background:var(--red);color:#fff;padding:22px max(5vw,16px) 26px}
 header h1{margin:0;font-size:clamp(26px,4vw,40px);line-height:1.15;font-weight:900;text-wrap:balance}
 header p{margin:6px 0 0;opacity:.92;max-width:64ch}
+.hd{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+.theme{flex:none;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:6px 16px;min-height:40px;font-size:15px;white-space:nowrap}
+.theme:hover{background:rgba(255,255,255,.26)}
+.theme:focus-visible{outline:3px solid #fff}
 .wrap{max-width:1240px;margin:0 auto;padding:24px max(5vw,16px) 48px;display:grid;gap:24px;grid-template-columns:minmax(0,1fr)}
 @media(min-width:900px){.wrap{grid-template-columns:minmax(0,370px) minmax(0,1fr)}.res{grid-column:2;grid-row:1/span 2}.inp{grid-column:1;grid-row:1/span 2;align-self:start;position:sticky;top:16px}}
 .card{background:var(--panel);border-radius:18px;padding:20px}
@@ -77,7 +81,7 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
 </head>
 <body>
 <header>
-  <h1>حاسبة نقطة التعادل والربح — لبنان</h1>
+  <div class="hd"><h1>حاسبة نقطة التعادل والربح — لبنان</h1><button type="button" class="theme" id="themeBtn" aria-label="تبديل وضع النهار والليل"></button></div>
   <p>أدخل تكاليف منتجك ونسبك، واعرف ربحك عن كل طلبية، والحدّ الذي تبدأ عنده الخسارة، ورأس المال المطلوب. الحساب بنفس طريقة حاسبة MDM Express.</p>
 </header>
 
@@ -178,7 +182,13 @@ const money=v=>(v<0?'-':'')+'$'+Math.abs(v).toFixed(2);
 const money0=v=>(v<0?'-':'')+'$'+Math.round(Math.abs(v)).toLocaleString('en-US');
 const pct=v=>(v*100).toFixed(1)+'%';
 const pct0=v=>Math.round(v*100)+'%';
-const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const probe=document.createElement('i');probe.style.display='none';document.documentElement.appendChild(probe);
+const cssv=n=>{probe.style.color=`var(${n})`;return getComputedStyle(probe).color};
+const sysDark=matchMedia('(prefers-color-scheme: dark)');
+function curTheme(){return document.documentElement.dataset.theme||(sysDark.matches?'dark':'light')}
+function paintThemeBtn(){$('themeBtn').textContent=curTheme()==='dark'?'☀️ وضع النهار':'🌙 وضع الليل'}
+function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('mdm-theme',t)}catch(e){}paintThemeBtn();render()}
+try{const t=localStorage.getItem('mdm-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}
 
 function setPreset(k){const p=PRESETS[k];const o=Object.assign({},BASE,p);fields.forEach(f=>{$(f).value=o[f]});$('test').checked=o.test;
   document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));$('presetNote').textContent=p.note;render()}
@@ -319,6 +329,9 @@ fields.forEach(k=>$(k).addEventListener('input',()=>{document.querySelectorAll('
 $('test').addEventListener('change',render);
 document.querySelectorAll('#presets button').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.p)));
 $('copy').addEventListener('click',()=>{navigator.clipboard.writeText($('msgbox').textContent).then(()=>{$('msg').textContent='تم نسخ الرسالة، الصقها في المحادثة مع التاجر.'}).catch(()=>{$('msg').textContent='تعذّر النسخ التلقائي، حدّد النص في المربع وانسخه يدويًا.'})});
+$('themeBtn').addEventListener('click',()=>setTheme(curTheme()==='dark'?'light':'dark'));
+sysDark.addEventListener('change',()=>{if(!document.documentElement.dataset.theme){paintThemeBtn();render()}});
+paintThemeBtn();
 setPreset('best');
 }
 
