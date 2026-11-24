@@ -156,7 +156,7 @@ tr.mid td{font-weight:700;background:light-dark(#eef0f3,#22252b)}
     <div class="card">
       <h2>رأس المال المطلوب</h2>
       <table><thead><tr><th>البند</th><th>متى يُدفع</th><th class="n">المبلغ</th></tr></thead><tbody id="cap"></tbody></table>
-      <p class="note">رسوم MDM Express تشمل رسوم الخدمة (6.85$ لكل طلبية موصلة + 0.80$ عن كل راجعة) ورسوم COD (5%)، وتُخصم من مبلغ التحصيل، فلا تدخل في رأس المال. تكلفة الاختبار: اختبار ناجح بـ 20 طلبية، و1.5 اختبار فاشل يُوقف عند نصف ميزانيته، بنسبة نجاح 40%.</p>
+      <p class="note">رسوم MDM Express تشمل ثمن الخدمة (6.85$ لكل طلبية موصلة) ورسوم COD (5%)، وتُخصم من مبلغ التحصيل، فلا تدخل في رأس المال. تكلفة الاختبار: اختبار ناجح بـ 20 طلبية، و1.5 اختبار فاشل يُوقف عند نصف ميزانيته، بنسبة نجاح 40%.</p>
     </div>
 
     <div class="card">
@@ -181,12 +181,13 @@ const PRESETS={
 // System sale price: computed from product cost with the best-scenario rates (82% x 68%, CPL $2).
 // Up to $40: profit fixed at $10 per delivered order. Above $40 (expensive product): profit = 25% of the
 // sale price (continuous at $40) and CPL rises by $0.05 for every $1 above $40. Rounded up to a whole dollar.
+const SVC=6.85;
 const PR={c:0.82,d:0.68,cpl:2,T:10,cap:40,share:0.25,cplStep:0.05};
 const cplFor=(base,P)=>+(base+PR.cplStep*Math.max(0,P-PR.cap)).toFixed(2);
 function sysPrice(price,w,rate){
   const C=price+rate*w; let P=30;
   for(let i=0;i<40;i++){
-    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+6.05+0.8/PR.d;
+    const X=C+cplFor(PR.cpl,P)/(PR.c*PR.d)+SVC;
     let n=1.05*(X+PR.T); if(n>PR.cap)n=X/(1/1.05-PR.share);
     if(Math.abs(n-P)<1e-6)break; P=n;
   }
@@ -231,16 +232,16 @@ function read(){
   return{rate:parseFloat($('src').value),price:n('price'),w:n('w'),P:n('sale'),cpl:n('cpl'),
     c:Math.min(1,Math.max(0.01,n('c')/100)),d:Math.min(1,Math.max(0.01,n('d')/100)),q:Math.max(1,Math.round(n('q'))),test:$('test').checked}
 }
-// fees = MDM service (6.85 per delivered + 0.80 per returned) + COD 5% (as in MDM calculator: price = costs x 1.05)
+// fees = MDM service (6.85 per delivered order) + COD 5% (as in MDM calculator: price = costs x 1.05)
 function calc(x,o={}){
   const c=o.c??x.c, d=o.d??x.d, cpl=o.cpl??x.cpl;
-  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=6.05+0.8/d, cod=x.P-x.P/1.05, fees=svc+cod;
+  const C=x.price+x.rate*x.w, ad=cpl/(c*d), svc=SVC, cod=x.P-x.P/1.05, fees=svc+cod;
   return{C,ad,svc,cod,fees,profit:x.P-C-ad-fees,t:c*d};
 }
 function breakeven(x,r){
   const price=(r.C+r.ad+r.svc)*1.05;
   const cpl=(x.P/1.05-r.C-r.svc)*x.c*x.d;
-  const den=x.P/1.05-r.C-6.05, d=den>0?(x.cpl/x.c+0.8)/den:Infinity;
+  const den=x.P/1.05-r.C-SVC, d=den>0?(x.cpl/x.c)/den:Infinity;
   return{price,cpl,t:d<=1?x.c*d:Infinity};
 }
 let S=null;
